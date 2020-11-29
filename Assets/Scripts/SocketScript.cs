@@ -10,7 +10,7 @@ public class SocketScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("Connection made to socketIO");
+        Debug.Log("Connection made to socketIO not really - abc");
         // var client = new SocketIO("http://127.0.0.1:4001");
         // client.On("inLeft", response => {
         //     jumbotron.InLeft();
