@@ -1,18 +1,29 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-// using SocketIOClient;
+using System.Reflection;
 
+using UnityWSControl;
 using HybridWebSocket;
+using FormUrlEncoded;
 
 public class SocketScript : MonoBehaviour
 {
     public Jumbotron jumbotron;
+    public TextField text_object;
+
     public string server;
     public string camera_name;
+    public WsData data;
 
+    // values for control
     private string ws_id;
+    public String text { get; set; }
+    public String jumbotron_position { get; set; }
+
+    private static String[] properties = { "text", "jumbotron_position" };
 
     // Start is called before the first frame update
     void Start()
@@ -28,16 +39,37 @@ public class SocketScript : MonoBehaviour
             Debug.Log("WS connected!");
             Debug.Log("WS state: " + ws.GetState().ToString());
 
-            ws.Send(Encoding.UTF8.GetBytes("/name " + this.camera_name));
-            ws.Send(Encoding.UTF8.GetBytes("a message"));
+            ws.Send(Encoding.UTF8.GetBytes("/join " + this.camera_name));
         };
 
         // Add OnMessage event listener
         ws.OnMessage += (byte[] msg) =>
         {
-            Debug.Log("WS received message: " + Encoding.UTF8.GetString(msg));
+            string string_message = Encoding.UTF8.GetString(msg);
+            Debug.Log("WS received message: " + string_message);
 
-            // ws.Close();
+            WsData data = Serializer.Deserialize<WsData>(string_message);
+
+            if (data.command == "/join" && data.room == this.camera_name)
+            {
+                this.ws_id = data.sender_id;
+                // get all values
+                ws.Send(Encoding.UTF8.GetBytes("/values"));
+            }
+            else if (data.command == "/values")
+            {
+
+            }
+            else if (data.command == "/get" || data.command == "/set")
+            {
+                var changed = this.SetValuesFromData(data);
+                if (changed.Contains("jumbotron_position")) this.SetJumbotron();
+                if (changed.Contains("text")) this.SetText();
+            }
+            else if (data.command == "/message")
+            {
+                Debug.Log("message received:" + data.message);
+            }
         };
 
         // Add OnError event listener
@@ -54,23 +86,54 @@ public class SocketScript : MonoBehaviour
 
         // Connect to the server
         ws.Connect();
+    }
 
-        // var client = new SocketIO("http://127.0.0.1:4001");
-        // client.On("inLeft", response => {
-        //     jumbotron.InLeft();
-        // });
-        // client.On("outLeft", response => {
-        //     jumbotron.OutLeft();
-        // });
-        // client.On("inRight", response => {
-        //     jumbotron.InRight();
-        // });
-        // client.On("outRight", response => {
-        //     jumbotron.OutRight();
-        // });
-        // client.OnConnected += async (sender, e) => {
-        //     await client.EmitAsync("unity");
-        // };
-        // await client.ConnectAsync();
+    private void SetJumbotron()
+    {
+        Debug.Log("Changing jumbotron: " + this.jumbotron_position);
+        if (this.jumbotron_position == "inLeft")
+        {
+            jumbotron.InLeft();
+        }
+        else if (this.jumbotron_position == "outLeft")
+        {
+            jumbotron.OutLeft();
+        }
+        else if (this.jumbotron_position == "inRight")
+        {
+            jumbotron.InRight();
+        }
+        else if (this.jumbotron_position == "outRight")
+        {
+            jumbotron.OutRight();
+        }
+    }
+
+    private void SetText()
+    {
+        this.text_object.SetText(this.text);
+    }
+
+    private List<string> SetValuesFromData(WsData data)
+    {
+        var changed = new List<string>();
+
+        foreach (string property in SocketScript.properties)
+        {
+            var dataProp = data.GetProperty(property);
+            var selfProp = this.GetProperty(property);
+            if (!selfProp.CanRead || !dataProp.CanRead) continue;
+            String dataValue = (String)dataProp.GetValue(data);
+            String selfValue = (String)selfProp.GetValue(this);
+            if (String.IsNullOrEmpty(dataValue)) continue;
+            if (dataValue != selfValue)
+            {
+                changed.Add(property);
+                Debug.Log("changed " + property + " to " + dataProp.GetValue(data) + " from " + selfProp.GetValue(this));
+                this.SetProperty(property, dataProp.GetValue(data));
+            }
+        }
+
+        return changed;
     }
 }
