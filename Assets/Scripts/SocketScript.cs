@@ -28,6 +28,10 @@ public class SocketScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        this.Connect();
+    }
+
+    private void Connect() {
         Debug.Log("Creating connection to websocket server");
 
         // Create WebSocket instance
@@ -82,6 +86,7 @@ public class SocketScript : MonoBehaviour
         ws.OnClose += (WebSocketCloseCode code) =>
         {
             Debug.Log("WS closed with code: " + code.ToString());
+            this.Connect();
         };
 
         // Connect to the server
