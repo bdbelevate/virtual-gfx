@@ -21,9 +21,9 @@ public class SocketScript : MonoBehaviour
     // values for control
     private string ws_id;
     public String text { get; set; }
-    public String jumbotron_position { get; set; }
+    public String jt_pos { get; set; }
 
-    private static String[] properties = { "text", "jumbotron_position" };
+    private static String[] properties = { "text", "jt_pos" };
 
     // Start is called before the first frame update
     void Start()
@@ -31,7 +31,8 @@ public class SocketScript : MonoBehaviour
         this.Connect();
     }
 
-    private void Connect() {
+    private void Connect()
+    {
         Debug.Log("Creating connection to websocket server");
 
         // Create WebSocket instance
@@ -67,7 +68,7 @@ public class SocketScript : MonoBehaviour
             else if (data.command == "/get" || data.command == "/set")
             {
                 var changed = this.SetValuesFromData(data);
-                if (changed.Contains("jumbotron_position")) this.SetJumbotron();
+                if (changed.Contains("jt_pos")) this.SetJumbotron();
                 if (changed.Contains("text")) this.SetText();
             }
             else if (data.command == "/message")
@@ -95,20 +96,20 @@ public class SocketScript : MonoBehaviour
 
     private void SetJumbotron()
     {
-        Debug.Log("Changing jumbotron: " + this.jumbotron_position);
-        if (this.jumbotron_position == "inLeft")
+        Debug.Log("Changing jumbotron: " + this.jt_pos);
+        if (this.jt_pos == "inLeft")
         {
             jumbotron.InLeft();
         }
-        else if (this.jumbotron_position == "outLeft")
+        else if (this.jt_pos == "outLeft")
         {
             jumbotron.OutLeft();
         }
-        else if (this.jumbotron_position == "inRight")
+        else if (this.jt_pos == "inRight")
         {
             jumbotron.InRight();
         }
-        else if (this.jumbotron_position == "outRight")
+        else if (this.jt_pos == "outRight")
         {
             jumbotron.OutRight();
         }

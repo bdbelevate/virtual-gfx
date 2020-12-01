@@ -14,6 +14,6 @@ namespace UnityWSControl
 
         // specific to the app
         public String text { get; set; }
-        public String jumbotron_position { get; set; }
+        public String jt_pos { get; set; }
     }
 }
